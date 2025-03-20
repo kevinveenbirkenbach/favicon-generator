@@ -10,7 +10,7 @@ favicon-generator is a Python tool that creates multi-resolution favicons from a
 
 ## Installation 📦
 
-Install favicon-generator using Kevin's Package Manager:
+Install favicon-generator using [Kevin's Package Manager](https://github.com/kevinveenbirkenbach/package-manager):
 
 ```bash
 pkgmgr install favgen
