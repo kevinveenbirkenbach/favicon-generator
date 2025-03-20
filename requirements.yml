@@ -1,0 +1,4 @@
+pkgmgr:
+  - imgrszr
+pacman:
+  - imagemagick

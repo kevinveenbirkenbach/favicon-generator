@@ -5,10 +5,8 @@ import os
 
 def run_imgrszr(input_path, size):
     output_dir = f"{size}x{size}"
-    # Ensure the output directory exists
     os.makedirs(output_dir, exist_ok=True)
     
-    # Build the imgrszr command
     cmd = [
         "imgrszr",
         "--max-width", str(size),
@@ -20,27 +18,39 @@ def run_imgrszr(input_path, size):
     print(f"Running: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
 
-def create_favicon(sizes):
+def create_favicons(sizes):
     favicon_dir = "favicon"
     os.makedirs(favicon_dir, exist_ok=True)
     
-    # Build the list of png files from each folder
-    png_paths = []
-    for size in sizes:
-        folder = f"{size}x{size}"
-        # Using a glob pattern to match all png files in the folder
-        png_paths.append(f"{folder}/*.png")
+    # Use the smallest size folder as reference for filenames
+    reference_folder = f"{sizes[0]}x{sizes[0]}"
+    if not os.path.isdir(reference_folder):
+        print(f"Reference folder {reference_folder} does not exist.")
+        return
     
-    # Build the convert command
-    # This will combine all pngs into one multi-resolution favicon.ico file.
-    cmd = ["convert"] + png_paths + [os.path.join(favicon_dir, "favicon.ico")]
-    
-    print(f"Running: {' '.join(cmd)}")
-    subprocess.run(cmd, check=True)
+    for filename in os.listdir(reference_folder):
+        if filename.lower().endswith(".png"):
+            input_files = []
+            missing = False
+            for size in sizes:
+                file_path = os.path.join(f"{size}x{size}", filename)
+                if os.path.exists(file_path):
+                    input_files.append(file_path)
+                else:
+                    print(f"Warning: {file_path} does not exist.")
+                    missing = True
+            if missing:
+                print(f"Skipping {filename} due to missing sizes.")
+                continue
+            
+            output_file = os.path.join(favicon_dir, filename.rsplit('.', 1)[0] + ".ico")
+            cmd = ["magick"] + input_files + [output_file]
+            print(f"Running: {' '.join(cmd)}")
+            subprocess.run(cmd, check=True)
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate resized images and combine them into a multi-resolution favicon."
+        description="Generate multi-resolution favicons from a single image."
     )
     parser.add_argument("input_path", help="Path to the full-size image or directory")
     parser.add_argument(
@@ -57,8 +67,8 @@ def main():
     for size in args.sizes:
         run_imgrszr(args.input_path, size)
     
-    # Combine all generated PNGs into one favicon.ico
-    create_favicon(args.sizes)
+    # Create individual favicon.ico files for each image found in the smallest size folder
+    create_favicons(args.sizes)
     
 if __name__ == "__main__":
     main()
